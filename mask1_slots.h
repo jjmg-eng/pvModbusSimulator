@@ -44,8 +44,6 @@ static int slotInit(PARAM *p, DATA *d)
   }
 // Configuração da tabela de sinais
   id = Table2;
-  //pvSetRowHeight(p,id,-1,0);
-  //pvSetColumnWidth(p,id,-1,0);
   pvSetEditable(p,id,0);
   x = 0; y = -1;
   pvTablePrintf(p,id,x++,y,"Amplitude");
@@ -112,11 +110,12 @@ static int slotNullEvent(PARAM *p, DATA *d)
   id = Table2;
   for(y = 0; y<8; y++){
       x = 0;
-      pvTablePrintf(p,id,x++,y,"%g [%]",AI[y].amp/100.0);
-      pvTablePrintf(p,id,x++,y,"%g [s]",AI[y].T/100.0);
-      pvTablePrintf(p,id,x++,y,"%d°",AI[y].fase);
-      pvTablePrintf(p,id,x++,y,"%d [%]",AI[y].offset);
-      pvTablePrintf(p,id,x++,y,"%g [mA]",modbus.readShort(AIoffset,y)/1000.0);
+      i = !!(d->AI == y);
+      pvTablePrintf(p,id,x++,y,"color(%d,%d,%d)%g [%]",  255, 255-15*i, 255-100*i, AI[y].amp/100.0);
+      pvTablePrintf(p,id,x++,y,"color(%d,%d,%d)%g [s]",  255, 255-15*i, 255-100*i, AI[y].T/100.0);
+      pvTablePrintf(p,id,x++,y,"color(%d,%d,%d)%d°",     255, 255-15*i, 255-100*i, AI[y].fase);
+      pvTablePrintf(p,id,x++,y,"color(%d,%d,%d)%d [%]",  255, 255-15*i, 255-100*i, AI[y].offset);
+      pvTablePrintf(p,id,x++,y,"color(%d,%d,%d)%g [mA]", 255, 255-15*i, 255-100*i, modbus.readShort(AIoffset,y)/1000.0);
   }
 //****************************************************************************
 
@@ -145,12 +144,10 @@ static int slotButtonReleasedEvent(PARAM *p, int id, DATA *d)
 
 static int slotTextEvent(PARAM *p, int id, DATA *d, const char *text)
 {
-  if(d->init < 10) return 0;
-  if(p == NULL || id == 0 || d == NULL || text == NULL || d->init < 10) return -1;
+  if(p == NULL || id == 0 || d == NULL || text == NULL) return -1;
   switch(id){
   	case AIselect:{
 		d->AI = atoi( text + 2 ) - 1;
-		d->init = 0;
   		int id_ = AMP;
   		qwtKnobSetValue(p,id_,AI[d->AI].amp/100.0);
 
@@ -170,7 +167,7 @@ static int slotTextEvent(PARAM *p, int id, DATA *d, const char *text)
 static int slotSliderEvent(PARAM *p, int id, DATA *d, int val)
 {
   if(d->init < 10) return 0;
-  if(p == NULL || id == 0 || d == NULL || val < -1000 || d->init <10) return -1;
+  if(p == NULL || id == 0 || d == NULL || val < -1000) return -1;
   switch(id){
 	case AMP: {
 		AI[d->AI].amp = val * 100;
